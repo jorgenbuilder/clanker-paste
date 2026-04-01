@@ -1,0 +1,88 @@
+type PasteView = 
+ record {
+   contentType: text;
+   createdAt: int;
+   expiresAt: int;
+   id: text;
+   paymentStatus: text;
+   sizeBytes: nat;
+   title: text;
+   uploadComplete: bool;
+ };
+type InitPasteResponse = 
+ record {
+   chain: text;
+   chunksExpected: nat;
+   expectedAmount: text;
+   expiresAt: int;
+   pasteId: text;
+   paymentAddress: text;
+ };
+type InitPasteRequest = 
+ record {
+   contentType: text;
+   durationDays: nat;
+   firstChunk: blob;
+   paymentChain: text;
+   title: text;
+   totalSize: nat;
+ };
+type HttpResponse = 
+ record {
+   body: blob;
+   headers: vec record {
+                  text;
+                  text;
+                };
+   status_code: nat16;
+ };
+type HttpRequest = 
+ record {
+   body: blob;
+   headers: vec record {
+                  text;
+                  text;
+                };
+   method: text;
+   url: text;
+ };
+service : {
+  confirmPayment: (pasteId: text, txHash: text) -> (bool);
+  createPaste: (req:
+   record {
+     content: blob;
+     contentType: text;
+     durationDays: nat;
+     paymentChain: text;
+     title: text;
+   }) ->
+   (record {
+      chain: text;
+      expectedAmount: text;
+      expiresAt: int;
+      pasteId: text;
+      paymentAddress: text;
+    });
+  deletePaste: (pasteId: text) -> (bool);
+  gc: () -> (nat);
+  getChunk: (pasteId: text, index: nat) -> (opt blob) query;
+  getChunkCount: (pasteId: text) -> (opt nat) query;
+  getLastTxHash: () -> (text) query;
+  getLastVerifyError: () -> (text) query;
+  getPasteContent: (pasteId: text) -> (opt blob) query;
+  getPasteInfo: (pasteId: text) -> (opt PasteView) query;
+  http_request: (req: HttpRequest) -> (HttpResponse) query;
+  initPaste: (req: InitPasteRequest) -> (InitPasteResponse);
+  myPastes: () -> (vec PasteView) query;
+  stats: () ->
+   (record {
+      maxStorageBytes: nat;
+      totalPastes: nat;
+      totalStorageBytes: nat;
+    }) query;
+  uploadChunk: (pasteId: text, chunk: blob) ->
+   (record {
+      chunksReceived: nat;
+      complete: bool;
+    });
+}
